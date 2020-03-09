@@ -1,0 +1,41 @@
+#!/bin/bash
+set -e 
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true
+
+if [ $(($1%3)) -eq 0 ]
+then
+    CNT=16
+elif [ $(($1%3)) -eq 1 ]
+then
+    CNT=1
+else
+    CNT=8
+fi
+
+docker build -t cloudsuite/spark commons/spark/2.3.1
+docker build -t cloudsuite/graph-analytics benchmarks/graph-analytics/3.0
+#docker pull cloudsuite/graph-analytics
+#docker pull cloudsuite/twitter-dataset-graph
+
+docker network create --driver bridge spark-net || true
+docker create --name data cloudsuite/twitter-dataset-graph || true
+
+docker run -dP --net spark-net --hostname spark-master --name spark-master \
+                 cloudsuite/spark master
+
+echo 'creat slaves'
+count=0
+while [ $count -lt $CNT ]
+do
+    docker run -dP --net spark-net --volumes-from data --name spark-worker-0$count \
+        cloudsuite/spark worker spark://spark-master:7077
+    ((count=count+1))
+done
+
+echo 'execute benchmark'
+docker run --rm --net spark-net --volumes-from data cloudsuite/graph-analytics --driver-memory 1g --executor-memory 4g --master spark://spark-master:7077
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true

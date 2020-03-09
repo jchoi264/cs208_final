@@ -1,0 +1,42 @@
+#!/bin/bash
+set -e 
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true
+
+# please adjust the number of instances
+if [ $(($1%3)) -eq 0 ]
+then
+    CNT=32
+elif [ $(($1%3)) -eq 1 ]
+then
+    CNT=1
+else
+    CNT=16
+fi
+
+# you can comment out for initiation
+docker build -t cloudsuite/java:openjdk8 commons/java/openjdk8
+docker build -t cloudsuite/java:latest commons/java/openjdk8
+docker build -t cloudsuite/java:openjdk7 commons/java/openjdk7
+docker build -t cloudsuite/data-analytics benchmarks/data-analytics/3.0.0
+
+docker network create hadoop-net || true 
+
+docker run -d --net hadoop-net --name master --hostname master cloudsuite/data-analytics master
+
+echo '#workers'
+echo $CNT
+#for i in {1.."$@"}; do
+count=0
+while [ $count -lt $CNT ]
+do
+    docker run -d --net hadoop-net --name slave$count --hostname slave$count cloudsuite/hadoop slave
+    ((count=count+1))
+done
+
+echo 'execute benchmark'
+docker exec master benchmark
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true
