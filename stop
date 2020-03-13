@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e 
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true

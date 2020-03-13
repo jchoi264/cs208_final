@@ -7,6 +7,8 @@ RUN groupadd -r memcache && useradd -r -g memcache memcache
 ENV DEBIAN_FRONTEND noninteractive
 
 COPY memcached.tar.gz /memcached.tar.gz
+COPY run_caching.sh /tmp
+RUN chmod 777 /tmp/run_caching.sh
 
 RUN apt-get update && apt-get install -y libevent-2.1-6 vim --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*

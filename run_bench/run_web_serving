@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e 
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true
+
+docker pull cloudsuite/web-serving:db_server
+echo 'run db server'
+docker run -dt --net=host --name=mysql_server cloudsuite/web-serving:db_server 172.16.1.20
+
+docker pull cloudsuite/web-serving:memcached_server
+docker run -dt --net=host --name=memcache_server cloudsuite/web-serving:memcached_server
+
+docker pull cloudsuite/web-serving:web_server
+docker run -e "HHVM=true" -dt --net=host --name=web_server_local cloudsuite/web-serving:web_server /etc/bootstrap.sh 172.16.1.20 172.16.1.20 
+
+echo 'run benchmark'
+docker pull cloudsuite/web-serving:faban_client
+#run
+RUM_CMD=/home/jinyoungchoi/work/cloudsuite_dev/out/web_serving/sample
+EVNT_PTWi=itlb_misses.miss_causes_a_walk
+EVNT_PTWd=dtlb_load_misses.miss_causes_a_walk
+EVNT_PTWs=dtlb_store_misses.miss_causes_a_walk
+EVNT_LLC=mem_load_retired.l3_miss:p
+EVNT=$EVNT_LLC
+echo 'execute benchmark'
+if [ $(($2)) -eq 1 ]
+then
+    sudo time -o $RUM_CMD/$1_1_$3.txt docker run --net=host --name=faban_client cloudsuite/web-serving:faban_client 172.16.1.20 100 || true
+elif [ $(($2)) -eq 2 ]
+then
+    sudo time -o $RUM_CMD/$1_2_$3.txt perf record -o $RUM_CMD/$1_2.perf  -c 16384 -a --phys-data -d -e $EVNT docker run --net=host --name=faban_client cloudsuite/web-serving:faban_client 172.16.1.20 100
+elif [ $(($2)) -eq 3 ]
+then
+    sudo time -o $RUM_CMD/$1_3_$3.txt perf record -o $RUM_CMD/$1_3.perf  -c 65536 -a --phys-data -d -e $EVNT docker run --net=host --name=faban_client cloudsuite/web-serving:faban_client 172.16.1.20 100
+else
+    sudo time -o $RUM_CMD/$1_4_$3.txt perf record -o $RUM_CMD/$1_4.perf  -c 1024 -a --phys-data -d -e $EVNT docker run --net=host --name=faban_client cloudsuite/web-serving:faban_client 172.16.1.20 100
+fi
+
+echo 'stop nlm_run'
+echo 0 > /proc/sys/kernel/nlm_run
+
+docker stop $(docker ps -q) || true
+docker rm $(docker ps -aq) || true
