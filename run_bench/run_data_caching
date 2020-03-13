@@ -16,12 +16,12 @@ else
 fi
 
 docker build -t cloudsuite/data-caching:client benchmarks/data-caching/client --no-cache
-docker build -t cloudsuite/data-caching:server benchmarks/data-caching/server
+#docker build -t cloudsuite/data-caching:server benchmarks/data-caching/server
 docker build -t cloudsuite/memcached commons/memcached/1.5.20
 
 docker network create caching_network || true
 
-#docker pull cloudsuite/data-caching:server
+docker pull cloudsuite/data-caching:server
 
 count=0
 while [ $count -lt $CNT ]
@@ -30,11 +30,10 @@ do
     ((count=count+1))
 done
 
-#docker pull cloudsuite/data-caching:client
 
 #run
 echo 'execute benchmark'
-docker run -it --name dc-client --net caching_network cloudsuite/data-caching:client /tmp/run_caching.sh $1 || true
+sudo perf stat -e cache-misses,page-faults -a docker run -it --name dc-client --net caching_network cloudsuite/data-caching:client /tmp/run_caching.sh $1 || true
 
 docker stop $(docker ps -q) || true
 docker rm $(docker ps -aq) || true

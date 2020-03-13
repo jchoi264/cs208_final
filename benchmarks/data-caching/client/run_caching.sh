@@ -12,7 +12,7 @@ then
         -a /usr/src/memcached/twitter_dataset/twitter_dataset_unscaled \
         -o /usr/src/memcached/twitter_dataset/twitter_dataset \
         -s /usr/src/memcached/memcached_client/servers.txt \
-        -w 4 -S 120 -D 4096 -j
+        -w 4 -S 30 -D 4096 -j
 	/usr/src/memcached/memcached_client//loader \
 		-a /usr/src/memcached/twitter_dataset/twitter_dataset \
 		-s /usr/src/memcached/memcached_client/servers.txt \
@@ -25,7 +25,7 @@ then
         -a /usr/src/memcached/twitter_dataset/twitter_dataset_unscaled \
         -o /usr/src/memcached/twitter_dataset/twitter_dataset \
         -s /usr/src/memcached/memcached_client/servers.txt \
-        -w 4 -S 120 -D 4096 -j
+        -w 4 -S 30 -D 4096 -j
 	/usr/src/memcached/memcached_client//loader \
 		-a /usr/src/memcached/twitter_dataset/twitter_dataset \
 		-s /usr/src/memcached/memcached_client/servers.txt \
@@ -38,7 +38,7 @@ else
         -a /usr/src/memcached/twitter_dataset/twitter_dataset_unscaled \
         -o /usr/src/memcached/twitter_dataset/twitter_dataset \
         -s /usr/src/memcached/memcached_client/servers.txt \
-        -w 4 -S 120 -D 4096 -j
+        -w 4 -S 30 -D 4096 -j
 	/usr/src/memcached/memcached_client//loader \
 		-a /usr/src/memcached/twitter_dataset/twitter_dataset \
 		-s /usr/src/memcached/memcached_client/servers.txt \
