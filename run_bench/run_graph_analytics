@@ -14,10 +14,10 @@ else
     CNT=8
 fi
 
-docker build -t cloudsuite/spark commons/spark/2.3.1
-docker build -t cloudsuite/graph-analytics benchmarks/graph-analytics/3.0
-#docker pull cloudsuite/graph-analytics
-#docker pull cloudsuite/twitter-dataset-graph
+#docker build -t cloudsuite/spark commons/spark/2.3.1
+#docker build -t cloudsuite/graph-analytics benchmarks/graph-analytics/3.0
+docker pull cloudsuite/graph-analytics
+docker pull cloudsuite/twitter-dataset-graph
 
 docker network create --driver bridge spark-net || true
 docker create --name data cloudsuite/twitter-dataset-graph || true
@@ -35,7 +35,7 @@ do
 done
 
 echo 'execute benchmark'
-docker run --rm --net spark-net --volumes-from data cloudsuite/graph-analytics --driver-memory 1g --executor-memory 4g --master spark://spark-master:7077
+sudo perf stat -e cache-misses,page-faults -a docker run --rm --net spark-net --volumes-from data cloudsuite/graph-analytics --driver-memory 1g --executor-memory 4g --master spark://spark-master:7077
 
 docker stop $(docker ps -q) || true
 docker rm $(docker ps -aq) || true

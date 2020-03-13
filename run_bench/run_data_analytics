@@ -36,7 +36,7 @@ do
 done
 
 echo 'execute benchmark'
-docker exec master benchmark
+sudo perf stat -e cache-misses,page-faults -a docker exec master benchmark
 
 docker stop $(docker ps -q) || true
 docker rm $(docker ps -aq) || true
